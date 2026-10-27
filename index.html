@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direktorat ITD - Meeting Room Booking System</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 flex flex-col font-sans antialiased">
+
+    <!-- Header & Brand Navigation -->
+    <header class="sticky top-0 z-40 w-full bg-white border-b border-slate-200 shadow-sm">
+        <div class="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 gap-4">
+                
+                <!-- Logo & Brand Title -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-md shadow-blue-500/20 text-white font-bold">
+                        <i data-lucide="building-2" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-base md:text-lg font-bold text-slate-900 leading-none">Direktorat ITD</h1>
+                            <span id="db-status-badge" class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Cloud Active
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 font-medium mt-0.5">Sistem Booking Ruang Rapat Online</p>
+                    </div>
+                </div>
+
+                <!-- Clock & Date Display -->
+                <div class="flex items-center gap-4">
+                    <div class="text-right text-xs">
+                        <span id="clock-time" class="font-bold text-slate-800 text-sm tracking-wide">00:00:00 WIB</span>
+                        <span id="clock-date" class="text-slate-500 block">Selasa, 27 Okt 2026</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Notification Toast Floating Container -->
+    <div class="fixed top-20 right-4 z-50 max-w-md w-full px-4 pointer-events-none">
+        <div id="toast-notification" class="hidden pointer-events-auto p-4 rounded-2xl border bg-white shadow-xl transition-all duration-300 flex items-start justify-between gap-3 border-slate-200">
+            <div class="flex items-center space-x-3">
+                <div id="toast-icon-bg" class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0">
+                    <i id="toast-icon" class="text-base"></i>
+                </div>
+                <div>
+                    <h4 id="toast-title" class="text-xs font-bold uppercase tracking-wider">Notifikasi</h4>
+                    <p id="toast-message" class="text-xs font-medium text-slate-600 mt-0.5 leading-relaxed"></p>
+                </div>
+            </div>
+            <button onclick="hideToast()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg shrink-0">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow max-w-[1700px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- TOP SECTION: LIVE ROOM STATUS CARDS (4 ROOMS) -->
+        <section class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="door-open" class="w-5 h-5 text-blue-600"></i>
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900">Status Live Rapat & Ketersediaan Ruangan Hari Ini</h2>
+                        <p class="text-[11px] text-slate-500">Menampilkan agenda rapat yang sedang berlangsung atau ketersediaan ruangan</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="date" id="dashboard-date-picker" onchange="renderDashboard()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button onclick="setDashboardToday()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all">Today</button>
+                </div>
+            </div>
+
+            <!-- 4 Room Live Status Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-1">
+                
+                <!-- 1. Bravery Card -->
+                <div id="card-container-Bravery" class="p-4 rounded-2xl border transition-all duration-200 bg-white border-slate-200 flex flex-col justify-between shadow-xs">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">Bravery (8)</span>
+                            <span id="badge-room-Bravery" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">Tersedia</span>
+                        </div>
+                        <div id="status-title-Bravery" class="text-xs font-bold text-slate-800 line-clamp-1 mt-1">Kosong / Tersedia</div>
+                        <div id="status-desc-Bravery" class="text-[11px] text-slate-500 truncate mt-0.5">Dapat dibooking kapan saja</div>
+                    </div>
+                    <div id="status-footer-Bravery" class="mt-3 pt-2.5 border-t border-slate-100 text-[11px] font-medium text-slate-400 flex items-center justify-between">
+                        <span>Kapasitas: 8 Orang</span>
+                        <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500"></i>
+                    </div>
+                </div>
+
+                <!-- 2. Agility Card -->
+                <div id="card-container-Agility" class="p-4 rounded-2xl border transition-all duration-200 bg-white border-slate-200 flex flex-col justify-between shadow-xs">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">Agility (8)</span>
+                            <span id="badge-room-Agility" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">Tersedia</span>
+                        </div>
+                        <div id="status-title-Agility" class="text-xs font-bold text-slate-800 line-clamp-1 mt-1">Kosong / Tersedia</div>
+                        <div id="status-desc-Agility" class="text-[11px] text-slate-500 truncate mt-0.5">Dapat dibooking kapan saja</div>
+                    </div>
+                    <div id="status-footer-Agility" class="mt-3 pt-2.5 border-t border-slate-100 text-[11px] font-medium text-slate-400 flex items-center justify-between">
+                        <span>Kapasitas: 8 Orang</span>
+                        <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500"></i>
+                    </div>
+                </div>
+
+                <!-- 3. Integrity Card -->
+                <div id="card-container-Integrity" class="p-4 rounded-2xl border transition-all duration-200 bg-white border-slate-200 flex flex-col justify-between shadow-xs">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Integrity (8)</span>
+                            <span id="badge-room-Integrity" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">Tersedia</span>
+                        </div>
+                        <div id="status-title-Integrity" class="text-xs font-bold text-slate-800 line-clamp-1 mt-1">Kosong / Tersedia</div>
+                        <div id="status-desc-Integrity" class="text-[11px] text-slate-500 truncate mt-0.5">Dapat dibooking kapan saja</div>
+                    </div>
+                    <div id="status-footer-Integrity" class="mt-3 pt-2.5 border-t border-slate-100 text-[11px] font-medium text-slate-400 flex items-center justify-between">
+                        <span>Kapasitas: 8 Orang</span>
+                        <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500"></i>
+                    </div>
+                </div>
+
+                <!-- 4. Bravery & Agility (Gabungan) Card -->
+                <div id="card-container-Bravery & Agility" class="p-4 rounded-2xl border transition-all duration-200 bg-white border-purple-200 bg-purple-50/20 flex flex-col justify-between shadow-xs">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">Bravery+Agility (16)</span>
+                            <span id="badge-room-Bravery & Agility" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">Tersedia</span>
+                        </div>
+                        <div id="status-title-Bravery & Agility" class="text-xs font-bold text-slate-800 line-clamp-1 mt-1">Kosong / Tersedia</div>
+                        <div id="status-desc-Bravery & Agility" class="text-[11px] text-slate-500 truncate mt-0.5">Dapat dibooking untuk > 10 orang</div>
+                    </div>
+                    <div id="status-footer-Bravery & Agility" class="mt-3 pt-2.5 border-t border-purple-100 text-[11px] font-medium text-slate-400 flex items-center justify-between">
+                        <span>Sekat Dibuka (Max 16)</span>
+                        <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500"></i>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SPLIT LAYOUT: FORMULIR BOOKING (LEFT ~30%) & TABEL DATA (RIGHT ~70%) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- LEFT COLUMN (~30% / 4 of 12 Cols): FORMULIR BOOKING -->
+            <aside class="lg:col-span-4 lg:sticky lg:top-20 space-y-4">
+                <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="file-edit" class="w-4 h-4 text-blue-600"></i>
+                            <h2 class="text-sm font-bold text-slate-900">Formulir Booking Ruang Rapat</h2>
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-medium">*Wajib diisi</span>
+                    </div>
+
+                    <form id="booking-form" onsubmit="submitBooking(event)" class="space-y-4 text-xs">
+                        
+                        <!-- 1. Nama Agenda Meeting -->
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">
+                                1. Nama Agenda Meeting <span class="text-rose-500">*</span>
+                            </label>
+                            <input type="text" id="agenda-name" required placeholder="Contoh: Coordination Sync Up IT Transformation" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <!-- 2. Tanggal Meeting -->
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">
+                                2. Tanggal Meeting <span class="text-rose-500">*</span>
+                            </label>
+                            <input type="date" id="booking-date" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <!-- 3a. Waktu Mulai & 3b. Waktu Selesai -->
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">
+                                    3a. Waktu Mulai <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="time" id="start-time" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">
+                                    3b. Waktu Selesai <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="time" id="end-time" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+
+                        <!-- 4. Banyaknya Peserta -->
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">
+                                4. Banyaknya Peserta <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="number" id="participant-count" min="1" max="16" required placeholder="Jumlah peserta (orang)" oninput="onParticipantCountChange(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-3.5 pr-12 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <span class="absolute right-3 top-2.5 text-xs text-slate-400 font-medium pointer-events-none">Orang</span>
+                            </div>
+                            <div id="suggestion-banner" class="hidden mt-1.5 p-2 rounded-lg bg-purple-50 border border-purple-200 text-[11px] text-purple-700 flex items-center gap-1.5">
+                                <i data-lucide="info" class="w-3.5 h-3.5 text-purple-600 shrink-0"></i>
+                                <span>Peserta > 10 orang. Otomatis menggunakan <b>Bravery + Agility (Gabungan)</b>.</span>
+                            </div>
+                        </div>
+
+                        <!-- 5. Menggunakan Ruangan Mana -->
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">
+                                5. Menggunakan Ruangan Mana <span class="text-rose-500">*</span>
+                            </label>
+                            <select id="room-selection" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">-- Pilih Opsi Ruangan --</option>
+                                <option value="Bravery">✅ Bravery (Kapasitas: 8 orang)</option>
+                                <option value="Agility">✅ Agility (Kapasitas: 8 orang)</option>
+                                <option value="Integrity">✅ Integrity (Kapasitas: 8 orang)</option>
+                                <option value="Bravery & Agility">✅ Bravery + Agility (Gabungan - Kapasitas: 16 orang)</option>
+                            </select>
+                            <p class="text-[10px] text-slate-400 mt-1">Silakan pilih opsi ruangan ber-tanda centang (Tersedia).</p>
+                        </div>
+
+                        <!-- 6a. Nama PIC & 6b. No. WhatsApp PIC -->
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">
+                                    6a. Nama PIC <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="text" id="pic-name" required placeholder="Nama Lengkap" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">
+                                    6b. No. WA PIC <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="tel" id="pic-wa" required placeholder="08123456789" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+
+                        <!-- 7. PIN Keamanan -->
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">
+                                7. PIN Keamanan Hapus (4 Digit) <span class="text-rose-500">*</span>
+                            </label>
+                            <input type="password" id="booking-pin" maxlength="4" pattern="[0-9]{4}" required placeholder="PIN 4 angka (untuk pembatalan)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-mono tracking-widest placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-md shadow-blue-500/15 transition-all flex items-center justify-center gap-2 text-xs">
+                            <i data-lucide="calendar-check" class="w-4 h-4"></i> Simpan Booking Ruangan
+                        </button>
+                    </form>
+                </div>
+            </aside>
+
+            <!-- RIGHT COLUMN (~70% / 8 of 12 Cols): TABS, FILTERS & BOOKING TABLE -->
+            <section class="lg:col-span-8 space-y-4">
+                
+                <!-- TOP TABS NAVBAR -->
+                <div class="bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between gap-2">
+                    <div class="grid grid-cols-2 gap-2 w-full max-w-xl">
+                        <button id="tab-btn-active" onclick="switchTab('active')" class="py-3 px-5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 bg-blue-600 text-white shadow-sm">
+                            <i data-lucide="calendar" class="w-4 h-4"></i> Booking Aktif / Mendatang
+                            <span id="tab-count-active" class="ml-1 px-2 py-0.5 rounded-full bg-white text-blue-600 text-[11px] font-extrabold">0</span>
+                        </button>
+                        <button id="tab-btn-history" onclick="switchTab('history')" class="py-3 px-5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-100">
+                            <i data-lucide="history" class="w-4 h-4"></i> Riwayat / Event Selesai
+                            <span id="tab-count-history" class="ml-1 px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[11px] font-extrabold">0</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- FILTER & SEARCH BAR -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <!-- Filter Tanggal -->
+                    <div class="flex items-center gap-2.5 w-full sm:w-auto">
+                        <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                            <i data-lucide="calendar-search" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">FILTER TANGGAL</span>
+                            <input type="date" id="filter-date-input" onchange="renderCurrentTab()" class="bg-transparent text-xs font-semibold text-slate-800 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Search Box & Reset -->
+                    <div class="flex items-center gap-2 w-full sm:w-80">
+                        <div class="relative w-full">
+                            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
+                            <input type="text" id="table-search-input" oninput="renderCurrentTab()" placeholder="Cari Agenda, Ruangan, atau PIC..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <button onclick="resetFilters()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition-all shrink-0">
+                            Reset
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ROOM CAPACITY LEGEND -->
+                <div class="bg-white px-5 py-3 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <span class="font-bold text-slate-600">Kapasitas Ruangan:</span>
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                            <span class="text-slate-600 font-medium">Bravery (8)</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                            <span class="text-slate-600 font-medium">Agility (8)</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                            <span class="text-slate-600 font-medium">Bravery+Agility (16)</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            <span class="text-slate-600 font-medium">Integrity (8)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TABLE DATA CARD -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="list-todo" class="w-4 h-4 text-blue-600"></i>
+                            <h3 id="table-heading-title" class="text-sm font-bold text-slate-900">Daftar Booking Aktif / Mendatang</h3>
+                        </div>
+                        <span id="table-badge-count" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-600 border border-blue-200">0 Booking</span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                    <th class="py-3 px-4">RUANGAN</th>
+                                    <th class="py-3 px-4">AGENDA / EVENT</th>
+                                    <th class="py-3 px-4">PIC & WA</th>
+                                    <th class="py-3 px-4 text-center">AKSI</th>
+                                </tr>
+                            </thead>
+                            <tbody id="booking-table-body" class="divide-y divide-slate-100 text-xs text-slate-700">
+                                <!-- Dynamic Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+
+    </main>
+
+    <!-- Modal Verification PIN to Delete Agenda -->
+    <div id="delete-pin-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-150">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-2 text-rose-600">
+                    <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                    <h3 class="text-base font-bold text-slate-900">Verifikasi PIN Hapus</h3>
+                </div>
+                <button onclick="closeDeleteModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">Masukkan 4 digit PIN keamanan yang dibuat saat melakukan booking agenda ini.</p>
+            
+            <form onsubmit="confirmDeleteWithPin(event)" class="space-y-4">
+                <input type="hidden" id="modal-delete-id">
+                <div>
+                    <input type="password" id="modal-pin-input" maxlength="4" pattern="[0-9]{4}" required placeholder="----" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-center text-xl font-mono tracking-widest text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-md shadow-rose-500/20 flex items-center gap-1.5">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Hapus Agenda
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Core Logic & Firebase Integration -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, doc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Environment Config
+        const firebaseConfig = {
+  apiKey: "AIzaSyDOrCef0QpUh0N7goX2Z-RSvU5kJHAtJsg",
+  authDomain: "itd-booking-system.firebaseapp.com",
+  projectId: "itd-booking-system",
+  storageBucket: "itd-booking-system.firebasestorage.app",
+  messagingSenderId: "547836051388",
+  appId: "1:547836051388:web:9e4d82d97cbac21d4135b9",
+  measurementId: "G-EJHJGSQ6GL"
+};
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+        let bookingsData = [];
+        let targetDeleteId = null;
+        let currentTab = 'active'; // 'active' | 'history'
+
+        // Pre-populated Default Dummy Data for Today
+        const todayStr = new Date().toISOString().split('T')[0];
+        const defaultDummyBookings = [
+            {
+                id: 'local_101',
+                agendaName: 'Koordinasi Sync Up Project IT Transformation',
+                date: todayStr,
+                startTime: '14:00',
+                endTime: '16:00',
+                participants: 12,
+                room: 'Bravery & Agility',
+                picName: 'Wahid S.',
+                picWa: '08123456789',
+                pin: '1234',
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'local_102',
+                agendaName: 'Weekly Review Infrastructure & Security',
+                date: todayStr,
+                startTime: '09:00',
+                endTime: '11:00',
+                participants: 6,
+                room: 'Integrity',
+                picName: 'Rian H.',
+                picWa: '081987654321',
+                pin: '9999',
+                createdAt: new Date().toISOString()
+            }
+        ];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initIcons();
+            startClock();
+            setTodayDateDefault();
+
+            if (firebaseConfig) {
+                initFirebase();
+            } else {
+                initLocalStorageFallback();
+            }
+        });
+
+        function initIcons() {
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function startClock() {
+            const updateTime = () => {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB';
+                const dateStr = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
+                
+                const timeEl = document.getElementById('clock-time');
+                const dateEl = document.getElementById('clock-date');
+                if (timeEl) timeEl.textContent = timeStr;
+                if (dateEl) dateEl.textContent = dateStr;
+
+                // Refresh dashboard status dynamically as time ticks
+                renderDashboard();
+            };
+            updateTime();
+            setInterval(updateTime, 30000); // Check every 30 seconds
+        }
+
+        function setTodayDateDefault() {
+            const today = new Date().toISOString().split('T')[0];
+            const dashPicker = document.getElementById('dashboard-date-picker');
+            const bookingDate = document.getElementById('booking-date');
+            if (dashPicker) dashPicker.value = today;
+            if (bookingDate) bookingDate.value = today;
+        }
+
+        // --- FIREBASE / DATABASE SETUP ---
+        async function initFirebase() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        currentUser = user;
+                        listenFirestore();
+                    }
+                });
+            } catch (err) {
+                console.warn("Firebase Auth error, fallback to LocalStorage:", err);
+                initLocalStorageFallback();
+            }
+        }
+
+        function listenFirestore() {
+            if (!db || !currentUser) return;
+            const bookingsRef = collection(db, 'artifacts', appId, 'public', 'data', 'bookings');
+            
+            onSnapshot(bookingsRef, (snapshot) => {
+                bookingsData = [];
+                snapshot.forEach((docSnap) => {
+                    bookingsData.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                
+                // If cloud is empty initially, load default dummy
+                if (bookingsData.length === 0) {
+                    bookingsData = [...defaultDummyBookings];
+                }
+                renderAll();
+            }, (error) => {
+                console.error("Firestore Error:", error);
+                initLocalStorageFallback();
+            });
+        }
+
+        function initLocalStorageFallback() {
+            const badge = document.getElementById('db-status-badge');
+            if (badge) {
+                badge.className = "px-2 py-0.5 text-[10px] font-semibold rounded-full bg-amber-50 text-amber-600 border border-amber-200 flex items-center gap-1";
+                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Local Mode`;
+            }
+
+            const localData = localStorage.getItem('itd_room_bookings_v2');
+            bookingsData = localData ? JSON.parse(localData) : defaultDummyBookings;
+            renderAll();
+        }
+
+        function saveLocalData() {
+            localStorage.setItem('itd_room_bookings_v2', JSON.stringify(bookingsData));
+            renderAll();
+        }
+
+        // --- TOAST NOTIFICATIONS ---
+        window.showToast = function(message, type = 'success') {
+            const toast = document.getElementById('toast-notification');
+            const title = document.getElementById('toast-title');
+            const msg = document.getElementById('toast-message');
+            const iconBg = document.getElementById('toast-icon-bg');
+            const icon = document.getElementById('toast-icon');
+
+            msg.textContent = message;
+            if (type === 'success') {
+                title.textContent = 'Berhasil';
+                title.className = 'text-xs font-bold uppercase tracking-wider text-emerald-600';
+                iconBg.className = 'w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0';
+                icon.className = 'fa-solid fa-circle-check';
+            } else {
+                title.textContent = 'Jadwal Bentrok / Error';
+                title.className = 'text-xs font-bold uppercase tracking-wider text-rose-600';
+                iconBg.className = 'w-9 h-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0';
+                icon.className = 'fa-solid fa-circle-exclamation';
+            }
+
+            toast.classList.remove('hidden');
+            setTimeout(() => hideToast(), 5000);
+        };
+
+        window.hideToast = function() {
+            document.getElementById('toast-notification')?.classList.add('hidden');
+        };
+
+        // --- ROOM SEPARATION CONFLICT LOGIC ---
+        function getAffectedRooms(room) {
+            if (room === 'Bravery') return ['Bravery', 'Bravery & Agility'];
+            if (room === 'Agility') return ['Agility', 'Bravery & Agility'];
+            if (room === 'Bravery & Agility') return ['Bravery', 'Agility', 'Bravery & Agility'];
+            if (room === 'Integrity') return ['Integrity'];
+            return [room];
+        }
+
+        function checkConflict(newRoom, newDate, newStart, newEnd) {
+            const newAffected = getAffectedRooms(newRoom);
+            for (let b of bookingsData) {
+                if (b.date !== newDate) continue;
+                if (newStart < b.endTime && newEnd > b.startTime) {
+                    const existingAffected = getAffectedRooms(b.room);
+                    const isIntersect = newAffected.some(r => existingAffected.includes(r));
+                    if (isIntersect) {
+                        return { conflict: true, booking: b };
+                    }
+                }
+            }
+            return { conflict: false };
+        }
+
+        window.onParticipantCountChange = function(val) {
+            const count = parseInt(val) || 0;
+            const banner = document.getElementById('suggestion-banner');
+            const roomSelect = document.getElementById('room-selection');
+
+            if (count > 10) {
+                banner?.classList.remove('hidden');
+                if (roomSelect) roomSelect.value = 'Bravery & Agility';
+            } else {
+                banner?.classList.add('hidden');
+            }
+        };
+
+        // --- SUBMIT FORM ---
+        window.submitBooking = async function(event) {
+            event.preventDefault();
+
+            const agendaName = document.getElementById('agenda-name').value.trim();
+            const date = document.getElementById('booking-date').value;
+            const startTime = document.getElementById('start-time').value;
+            const endTime = document.getElementById('end-time').value;
+            const participants = parseInt(document.getElementById('participant-count').value);
+            const room = document.getElementById('room-selection').value;
+            const picName = document.getElementById('pic-name').value.trim();
+            const picWa = document.getElementById('pic-wa').value.trim();
+            const pin = document.getElementById('booking-pin').value.trim();
+
+            if (startTime >= endTime) {
+                showToast("Waktu selesai harus lebih akhir dari waktu mulai.", "error");
+                return;
+            }
+
+            const conflictCheck = checkConflict(room, date, startTime, endTime);
+            if (conflictCheck.conflict) {
+                const cb = conflictCheck.booking;
+                showToast(`Bentrok dengan agenda "${cb.agendaName}" (${cb.room}) pkl ${cb.startTime} - ${cb.endTime}.`, "error");
+                return;
+            }
+
+            const newBooking = {
+                agendaName,
+                date,
+                startTime,
+                endTime,
+                participants,
+                room,
+                picName,
+                picWa,
+                pin,
+                createdAt: new Date().toISOString()
+            };
+
+            if (db && currentUser) {
+                try {
+                    const bookingsRef = collection(db, 'artifacts', appId, 'public', 'data', 'bookings');
+                    await addDoc(bookingsRef, newBooking);
+                    showToast("Booking agenda berhasil disimpan ke Cloud!");
+                } catch (err) {
+                    console.error("Firestore Save Error:", err);
+                    showToast("Disimpan ke penyimpanan lokal...", "error");
+                    newBooking.id = 'local_' + Date.now();
+                    bookingsData.push(newBooking);
+                    saveLocalData();
+                }
+            } else {
+                newBooking.id = 'local_' + Date.now();
+                bookingsData.push(newBooking);
+                saveLocalData();
+                showToast("Booking agenda berhasil disimpan!");
+            }
+
+            document.getElementById('booking-form').reset();
+            setTodayDateDefault();
+        };
+
+        // --- RENDER LOGIC ---
+        function renderAll() {
+            renderDashboard();
+            renderTabCounts();
+            renderCurrentTab();
+            initIcons();
+        }
+
+        window.setDashboardToday = function() {
+            const datePicker = document.getElementById('dashboard-date-picker');
+            if (datePicker) {
+                datePicker.value = new Date().toISOString().split('T')[0];
+                renderDashboard();
+            }
+        };
+
+        // DYNAMIC TOP ROOM STATUS CARDS DISPLAYING CURRENT MEETING OR OCCUPIED SLOTS
+        window.renderDashboard = function() {
+            const datePicker = document.getElementById('dashboard-date-picker');
+            const selectedDate = datePicker ? datePicker.value : new Date().toISOString().split('T')[0];
+            const roomNames = ['Bravery', 'Agility', 'Integrity', 'Bravery & Agility'];
+
+            const now = new Date();
+            const currentTimeStr = now.toTimeString().split(' ')[0].substring(0, 5); // "HH:MM"
+
+            roomNames.forEach(room => {
+                const card = document.getElementById(`card-container-${room}`);
+                const badge = document.getElementById(`badge-room-${room}`);
+                const title = document.getElementById(`status-title-${room}`);
+                const desc = document.getElementById(`status-desc-${room}`);
+                const footer = document.getElementById(`status-footer-${room}`);
+                if (!badge || !title || !desc || !footer) return;
+
+                // Find bookings that affect this room on selected date
+                const roomBookings = bookingsData.filter(b => b.date === selectedDate && getAffectedRooms(b.room).includes(room));
+
+                // Find currently active booking right now
+                const ongoingBooking = roomBookings.find(b => currentTimeStr >= b.startTime && currentTimeStr <= b.endTime);
+
+                if (ongoingBooking) {
+                    // ROOM IS CURRENTLY IN USE RIGHT NOW
+                    if (card) card.className = "p-4 rounded-2xl border transition-all duration-200 bg-rose-50/40 border-rose-300 shadow-sm flex flex-col justify-between";
+                    badge.className = "px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700 animate-pulse";
+                    badge.textContent = "Sedang Terpakai";
+
+                    title.textContent = ongoingBooking.agendaName;
+                    title.className = "text-xs font-bold text-rose-950 line-clamp-1 mt-1";
+
+                    desc.textContent = `Pkl ${ongoingBooking.startTime} - ${ongoingBooking.endTime} WIB • ${ongoingBooking.picName}`;
+                    
+                    footer.innerHTML = `
+                        <span class="text-rose-700 font-semibold">PIC: ${ongoingBooking.picName}</span>
+                        <a href="${getWhatsappUrl(ongoingBooking.picWa, ongoingBooking.picName, ongoingBooking.agendaName)}" target="_blank" class="text-emerald-600 hover:text-emerald-700 font-bold flex items-center gap-1">
+                            <i class="fa-brands fa-whatsapp"></i> Chat WA
+                        </a>
+                    `;
+                } else if (roomBookings.length > 0) {
+                    // ROOM HAS UPCOMING BOOKINGS TODAY
+                    const nextBooking = roomBookings[0];
+                    if (card) card.className = "p-4 rounded-2xl border transition-all duration-200 bg-amber-50/30 border-amber-200 flex flex-col justify-between shadow-xs";
+                    badge.className = "px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800";
+                    badge.textContent = `${roomBookings.length} Jadwal Today`;
+
+                    title.textContent = nextBooking.agendaName;
+                    title.className = "text-xs font-bold text-slate-800 line-clamp-1 mt-1";
+
+                    desc.textContent = `Pkl ${nextBooking.startTime} - ${nextBooking.endTime} WIB (${nextBooking.picName})`;
+
+                    footer.innerHTML = `
+                        <span class="text-amber-800">Ada Rapat Hari Ini</span>
+                        <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-600"></i>
+                    `;
+                } else {
+                    // ROOM IS COMPLETELY FREE
+                    if (card) card.className = "p-4 rounded-2xl border transition-all duration-200 bg-white border-slate-200 flex flex-col justify-between shadow-xs";
+                    badge.className = "px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700";
+                    badge.textContent = "Tersedia";
+
+                    title.textContent = "Kosong / Tersedia";
+                    title.className = "text-xs font-bold text-slate-800 line-clamp-1 mt-1";
+
+                    desc.textContent = "Dapat dibooking kapan saja";
+
+                    footer.innerHTML = `
+                        <span>Kapasitas: ${room === 'Bravery & Agility' ? '16' : '8'} Orang</span>
+                        <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-500"></i>
+                    `;
+                }
+            });
+            initIcons();
+        };
+
+        // HELPER TO GENERATE DIRECT WHATSAPP API LINK
+        function getWhatsappUrl(phoneRaw, picName, agendaName) {
+            let cleanNumber = phoneRaw.replace(/[^0-9]/g, '');
+            if (cleanNumber.startsWith('0')) {
+                cleanNumber = '62' + cleanNumber.substring(1);
+            }
+            const message = `Halo ${picName}, saya ingin menanyakan terkait agenda rapat: "${agendaName}".`;
+            return `https://api.whatsapp.com/send?phone=${cleanNumber}&text=${encodeURIComponent(message)}`;
+        }
+
+        window.switchTab = function(tab) {
+            currentTab = tab;
+            const btnActive = document.getElementById('tab-btn-active');
+            const btnHistory = document.getElementById('tab-btn-history');
+            const headingTitle = document.getElementById('table-heading-title');
+
+            if (tab === 'active') {
+                btnActive.className = "py-3 px-5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 bg-blue-600 text-white shadow-sm";
+                btnHistory.className = "py-3 px-5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-100";
+                headingTitle.textContent = "Daftar Booking Aktif / Mendatang";
+            } else {
+                btnHistory.className = "py-3 px-5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 bg-blue-600 text-white shadow-sm";
+                btnActive.className = "py-3 px-5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-100";
+                headingTitle.textContent = "Daftar Riwayat / Event Selesai";
+            }
+            renderCurrentTab();
+        };
+
+        function renderTabCounts() {
+            const now = new Date();
+            const activeList = bookingsData.filter(b => new Date(`${b.date}T${b.endTime}:00`) >= now);
+            const historyList = bookingsData.filter(b => new Date(`${b.date}T${b.endTime}:00`) < now);
+
+            document.getElementById('tab-count-active').textContent = activeList.length;
+            document.getElementById('tab-count-history').textContent = historyList.length;
+        }
+
+        window.resetFilters = function() {
+            document.getElementById('filter-date-input').value = '';
+            document.getElementById('table-search-input').value = '';
+            renderCurrentTab();
+        };
+
+        window.renderCurrentTab = function() {
+            const tbody = document.getElementById('booking-table-body');
+            const searchVal = (document.getElementById('table-search-input')?.value || '').toLowerCase();
+            const filterDate = document.getElementById('filter-date-input')?.value;
+            const now = new Date();
+
+            let targetList = [];
+
+            if (currentTab === 'active') {
+                targetList = bookingsData.filter(b => new Date(`${b.date}T${b.endTime}:00`) >= now);
+                targetList.sort((a, b) => new Date(`${a.date}T${a.startTime}:00`) - new Date(`${b.date}T${b.startTime}:00`));
+            } else {
+                targetList = bookingsData.filter(b => new Date(`${b.date}T${b.endTime}:00`) < now);
+                targetList.sort((a, b) => new Date(`${b.date}T${b.endTime}:00`) - new Date(`${a.date}T${a.startTime}:00`));
+            }
+
+            // Apply Filters
+            if (filterDate) {
+                targetList = targetList.filter(b => b.date === filterDate);
+            }
+            if (searchVal) {
+                targetList = targetList.filter(b => 
+                    b.agendaName.toLowerCase().includes(searchVal) || 
+                    b.picName.toLowerCase().includes(searchVal) ||
+                    b.room.toLowerCase().includes(searchVal)
+                );
+            }
+
+            document.getElementById('table-badge-count').textContent = `${targetList.length} Booking`;
+
+            if (!tbody) return;
+
+            if (targetList.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="py-8 text-center text-slate-400 italic">
+                            Tidak ada data booking yang sesuai.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            targetList.forEach(b => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition-all";
+
+                // Room Badge Styling Matching Reference
+                let roomBadgeHtml = '';
+                if (b.room === 'Bravery') {
+                    roomBadgeHtml = `<span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200 inline-block">Bravery (8)</span>`;
+                } else if (b.room === 'Agility') {
+                    roomBadgeHtml = `<span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-100 text-indigo-800 border border-indigo-200 inline-block">Agility (8)</span>`;
+                } else if (b.room === 'Bravery & Agility') {
+                    roomBadgeHtml = `<span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-200 inline-block">Bravery + Agility (Gabungan)</span>`;
+                } else {
+                    roomBadgeHtml = `<span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200 inline-block">Integrity (8)</span>`;
+                }
+
+                // WhatsApp API URL Direct Chat
+                const waApiUrl = getWhatsappUrl(b.picWa, b.picName, b.agendaName);
+
+                tr.innerHTML = `
+                    <td class="py-4 px-4 align-top">
+                        ${roomBadgeHtml}
+                        <div class="text-[11px] text-slate-500 font-medium flex items-center gap-1.5 mt-1.5">
+                            <i data-lucide="users" class="w-3.5 h-3.5 text-slate-400"></i> ${b.participants} Peserta
+                        </div>
+                    </td>
+                    <td class="py-4 px-4 align-top">
+                        <div class="font-bold text-slate-800 text-xs leading-snug">${b.agendaName}</div>
+                        <div class="text-[11px] text-slate-400 font-mono mt-1">ID: ITD-${b.id.substring(0,6)}</div>
+                        <div class="text-[11px] text-slate-500 font-medium flex items-center gap-1 mt-1">
+                            <i data-lucide="clock" class="w-3 h-3 text-slate-400"></i> ${b.startTime} - ${b.endTime} WIB (${b.date})
+                        </div>
+                    </td>
+                    <td class="py-4 px-4 align-top">
+                        <div class="font-semibold text-slate-800">${b.picName}</div>
+                        <a href="${waApiUrl}" target="_blank" title="Klik untuk kirim pesan WhatsApp" class="text-xs text-blue-600 hover:text-blue-700 hover:underline font-medium inline-flex items-center gap-1.5 mt-1 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-200 transition-all">
+                            <i class="fa-brands fa-whatsapp text-emerald-600 text-sm"></i> ${b.picWa}
+                        </a>
+                    </td>
+                    <td class="py-4 px-4 align-top text-center">
+                        <button onclick="openDeleteModal('${b.id}')" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-semibold text-xs transition-all inline-flex items-center gap-1 shadow-2xs">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Batal
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            initIcons();
+        };
+
+        // --- PIN DELETION MODAL ---
+        window.openDeleteModal = function(id) {
+            targetDeleteId = id;
+            document.getElementById('modal-delete-id').value = id;
+            document.getElementById('modal-pin-input').value = '';
+            document.getElementById('delete-pin-modal').classList.remove('hidden');
+        };
+
+        window.closeDeleteModal = function() {
+            targetDeleteId = null;
+            document.getElementById('delete-pin-modal').classList.add('hidden');
+        };
+
+        window.confirmDeleteWithPin = async function(event) {
+            event.preventDefault();
+            const enteredPin = document.getElementById('modal-pin-input').value;
+            const targetBooking = bookingsData.find(b => b.id === targetDeleteId);
+
+            if (!targetBooking) {
+                showToast("Agenda tidak ditemukan.", "error");
+                closeDeleteModal();
+                return;
+            }
+
+            if (targetBooking.pin !== enteredPin) {
+                showToast("PIN Keamanan salah! Hanya pembuat booking yang dapat membatalkan.", "error");
+                return;
+            }
+
+            if (db && currentUser && !targetDeleteId.startsWith('local_')) {
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'bookings', targetDeleteId);
+                    await deleteDoc(docRef);
+                    showToast("Agenda berhasil dibatalkan dari Cloud Server.");
+                } catch (err) {
+                    console.error("Firestore Delete Error:", err);
+                    showToast("Gagal menghapus dari cloud.", "error");
+                }
+            } else {
+                bookingsData = bookingsData.filter(b => b.id !== targetDeleteId);
+                saveLocalData();
+                showToast("Agenda berhasil dibatalkan.");
+            }
+
+            closeDeleteModal();
+        };
+
+    </script>
+</body>
+</html>
