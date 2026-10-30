@@ -1,18 +1,3 @@
-Perbaikan menyeluruh telah diterapkan pada file `index.html` untuk memastikan seluruh logika berjalan akurat secara real-time.
-
-### Perbaikan Logika Utama:
-
-1. **Logika Kartu Status Real-Time:** Kartu di bagian atas **hanya** akan berubah menjadi **Sedang Terpakai** jika jam saat ini tepat berada di rentang waktu rapat (`jamMulai <= jamSekarang` **dan** `jamSekarang < jamSelesai`). Agenda rapat jam 13:00 pada jam 09:20 WIB akan tetap berstatus **Tersedia** (Hijau).
-2. **Logika Sekat Partisi (Bravery & Agility):**
-* Apabila ruangan **Bravery & Agility** (Gabungan) sedang terpakai, maka kartu status individual **Bravery** dan **Agility** otomatis ikut terkunci menjadi **Sedang Terpakai** (Efek Sekat Terbuka).
-* Apabila salah satu ruangan individual (**Bravery** atau **Agility**) sedang terpakai, maka kartu status **Bravery & Agility** otomatis ikut terkunci.
-
-
-3. **Pemberitahuan Kapan Rapat Berikutnya:** Jika ruangan sedang **Tersedia** namun sudah ada jadwal di jam berikutnya hari ini, kartu status akan secara otomatis menampilkan info tambahan (contoh: *"Tersedia (Ada Rapat Pkl 13:00)*").
-
-Berikut adalah kodingan `index.html` lengkap yang sudah diperbaiki total:
-
-```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -302,12 +287,13 @@ Berikut adalah kodingan `index.html` lengkap yang sudah diperbaiki total:
         import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? __firebase_config : {
-            apiKey: "AIzaSy...",
+            apiKey: "AIzaSyDOrCef0QpUh0N7goX2Z-RSvU5kJHAtJsg",
             authDomain: "itd-booking-system.firebaseapp.com",
             projectId: "itd-booking-system",
-            storageBucket: "itd-booking-system.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:abc123def"
+            storageBucket: "itd-booking-system.firebasestorage.app",
+            messagingSenderId: "547836051388",
+            appId: "1:547836051388:web:9e4d82d97cbac21d4135b9",
+  measurementId: "G-EJHJGSQ6GL"
         };
 
         let db = null;
@@ -589,7 +575,3 @@ Berikut adalah kodingan `index.html` lengkap yang sudah diperbaiki total:
     </script>
 </body>
 </html>
-
-```
-
-Silakan *copy-paste* kode di atas ke file `index.html` repository GitHub kamu. Tampilan dan seluruh logika sistem dipastikan berjalan 100% presisi dan sinkron!
