@@ -1,785 +1,147 @@
 <!DOCTYPE html>
-<html lang="id" class="h-full">
+<html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem Booking Ruang Rapat</title>
-
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Inter', 'sans-serif'] },
-          colors: {
-            brand: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' }
-          }
+    <meta charset="UTF-8">
+    <!-- Pengaturan viewport wajib agar tampilan proporsional di layar HP -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alamat Baru - Booking Ruang Rapat</title>
+    
+    <!-- Menggunakan Tailwind CSS untuk styling yang bersih dan responsif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Menggunakan Google Font Inter untuk keterbacaan maksimal -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
         }
-      }
-    };
-  </script>
-
-  <!-- Komponen CSS (dipakai berulang) -->
-  <style>
-    /* Komponen: CSS biasa, tidak bergantung pada proses build Tailwind */
-    .card { background:#fff; border:1px solid #e2e8f0; border-radius:1rem; box-shadow:0 1px 2px rgba(0,0,0,.05); }
-    .dark .card { background:#0f172a; border-color:#1e293b; }
-
-    .label { display:block; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#334155; margin-bottom:.375rem; }
-    .dark .label { color:#cbd5e1; }
-
-    .field { width:100%; padding:.625rem 1rem .625rem 2.5rem; border-radius:.75rem; border:1px solid #cbd5e1; background:#f8fafc; color:#0f172a; font-size:.875rem; outline:none; }
-    .field:focus { box-shadow:0 0 0 2px #6366f1; }
-    .dark .field { border-color:#334155; background:#020617; color:#f1f5f9; }
-    .field-icon { position:absolute; left:.875rem; top:.75rem; color:#94a3b8; pointer-events:none; }
-
-    .tab { display:flex; align-items:center; padding:.5rem .75rem; border-radius:.5rem; border:0; background:none; cursor:pointer; font-size:.75rem; font-weight:600; color:#475569; transition:all .2s; }
-    .tab:hover { color:#0f172a; }
-    .dark .tab { color:#94a3b8; }
-    .dark .tab:hover { color:#f1f5f9; }
-    .tab.active { background:#fff; color:#4f46e5; box-shadow:0 1px 2px rgba(0,0,0,.08); }
-    .dark .tab.active { background:#0f172a; color:#818cf8; }
-    @media (min-width:640px) { .tab { padding:.5rem 1rem; font-size:.875rem; } }
-
-    .th { padding:.875rem; }
-
-    .btn-ghost { padding:.625rem 0; border-radius:.75rem; border:1px solid #cbd5e1; background:transparent; font-size:.75rem; font-weight:600; cursor:pointer; color:inherit; }
-    .btn-ghost:hover { background:#f1f5f9; }
-    .dark .btn-ghost { border-color:#334155; }
-    .dark .btn-ghost:hover { background:#1e293b; }
-
-    /* Scrollbar */
-    .custom-scroll::-webkit-scrollbar { width:6px; height:6px; }
-    .custom-scroll::-webkit-scrollbar-track { background:rgba(241,245,249,.6); border-radius:4px; }
-    .custom-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
-    .custom-scroll::-webkit-scrollbar-thumb:hover { background:#94a3b8; }
-    .dark .custom-scroll::-webkit-scrollbar-track { background:rgba(30,41,59,.6); }
-    .dark .custom-scroll::-webkit-scrollbar-thumb { background:#475569; }
-  </style>
+    </script>
 </head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col justify-center items-center p-4 sm:p-6 selection:bg-blue-100 selection:text-blue-900">
 
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans h-full flex flex-col antialiased selection:bg-brand-500 selection:text-white">
-
-  <!-- ===== HEADER ===== -->
-  <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm">
-    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-
-      <div class="flex items-center space-x-3 cursor-pointer" data-action="tab" data-tab="display">
-        <div class="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
-          <i class="fa-solid fa-door-open text-lg"></i>
-        </div>
-        <div>
-          <h1 class="text-base font-bold text-slate-900 dark:text-white leading-tight">MeetingSpace Portal</h1>
-          <p class="text-xs text-slate-500 dark:text-slate-400">Sistem Booking &amp; Smart Display Ruang Rapat</p>
-        </div>
-      </div>
-
-      <nav class="flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
-        <button class="tab active" data-action="tab" data-tab="display">
-          <i class="fa-solid fa-display"></i>
-          <span class="hidden sm:inline">Halaman 1:</span><span>Display &amp; Agenda</span>
-        </button>
-        <button class="tab" data-action="tab" data-tab="booking">
-          <i class="fa-solid fa-pen-to-square"></i>
-          <span class="hidden sm:inline">Halaman 2:</span><span>Form Booking</span>
-        </button>
-      </nav>
-
-      <button id="themeToggle" aria-label="Ganti tema" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
-        <i id="themeIcon" class="fa-solid fa-moon"></i>
-      </button>
-    </div>
-  </header>
-
-  <div id="toastContainer" class="fixed top-20 right-4 z-50 space-y-2 pointer-events-none"></div>
-
-  <!-- ===== MODAL PIN ===== -->
-  <div id="pinModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="card w-full max-w-md p-6 shadow-2xl space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-        <h3 class="font-bold text-base text-slate-900 dark:text-white flex items-center space-x-2">
-          <i class="fa-solid fa-shield-halved text-rose-500"></i><span>Verifikasi PIN Keamanan</span>
-        </h3>
-        <button data-action="close-pin" aria-label="Tutup" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-      <p class="text-xs text-slate-500 dark:text-slate-400">Masukkan PIN yang dibuat saat mengisi formulir booking untuk menghapus agenda ini.</p>
-      <div>
-        <label for="inputPinVerify" class="label">PIN Pemesan (4-6 Digit)</label>
-        <input type="password" id="inputPinVerify" maxlength="6" inputmode="numeric" placeholder="Masukkan PIN..."
-               class="w-full px-4 py-3 text-center text-xl tracking-widest rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-rose-500 outline-none font-mono">
-      </div>
-      <div class="flex space-x-3 pt-2">
-        <button data-action="close-pin" class="btn-ghost w-1/2">Batal</button>
-        <button data-action="confirm-pin" class="w-1/2 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-md shadow-rose-500/20">Hapus Agenda</button>
-      </div>
-    </div>
-  </div>
-
-  <main class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
-
-    <!-- ===== HALAMAN 1: DISPLAY ===== -->
-    <div id="pageDisplay" class="space-y-6">
-
-      <div class="card flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4">
-        <div>
-          <span class="text-[11px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider">Halaman 1</span>
-          <h2 class="text-xl font-bold text-slate-900 dark:text-white">Status Ruangan &amp; Agenda Rapat</h2>
-        </div>
-        <div class="flex items-center space-x-2 text-xs">
-          <i class="fa-solid fa-filter text-brand-500"></i>
-          <label for="filterRoomSelect" class="font-semibold text-slate-700 dark:text-slate-300">Filter Ruangan:</label>
-          <select id="filterRoomSelect" class="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-1.5 font-medium outline-none text-xs">
-            <option value="all">Semua Ruangan</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Status ruangan -->
-      <section>
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
-            <i class="fa-solid fa-door-open text-brand-500"></i><span>Status Ketersediaan Ruangan Hari Ini</span>
-          </h3>
-          <span class="text-xs text-slate-500 italic">*Bravery &amp; Agility dapat digabung untuk peserta &gt; 10 orang</span>
-        </div>
-        <div id="roomCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
-      </section>
-
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-        <div class="lg:col-span-10 space-y-6">
-
-          <!-- Agenda aktif -->
-          <section class="card overflow-hidden">
-            <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
-              <div>
-                <h3 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white flex items-center space-x-2">
-                  <i class="fa-solid fa-calendar-week text-brand-500"></i><span>Daftar Agenda Rapat Aktif &amp; Mendatang</span>
-                </h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Diurutkan kronologis berdasarkan tanggal dan jam mulai.</p>
-              </div>
-              <span id="activeAgendaCount" class="bg-brand-50 dark:bg-brand-600/20 text-brand-600 dark:text-brand-300 border border-brand-100 dark:border-brand-600/40 text-xs font-bold px-3 py-1 rounded-full">0 Agenda</span>
-            </div>
-            <div class="max-h-[500px] overflow-y-auto custom-scroll">
-              <table class="w-full text-left text-xs">
-                <thead class="bg-slate-100 dark:bg-slate-800 font-bold uppercase text-slate-500 dark:text-slate-400 sticky top-0 z-10 shadow-sm">
-                  <tr>
-                    <th class="th">Hari &amp; Tanggal</th><th class="th">Waktu</th><th class="th">Ruangan</th>
-                    <th class="th">Nama Agenda Rapat</th><th class="th">Peserta</th><th class="th">PIC &amp; No. WA</th>
-                    <th class="th text-center">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody id="activeAgendaTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
-              </table>
-            </div>
-          </section>
-
-          <!-- Riwayat -->
-          <section class="card overflow-hidden">
-            <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
-                <i class="fa-solid fa-clock-rotate-left text-slate-400"></i><span>Riwayat Agenda Rapat Selesai</span>
-              </h3>
-              <span id="completedAgendaCount" class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold px-3 py-1 rounded-full">0 Riwayat</span>
-            </div>
-            <div class="max-h-[250px] overflow-y-auto custom-scroll">
-              <table class="w-full text-left text-xs text-slate-500 dark:text-slate-400">
-                <thead class="bg-slate-50 dark:bg-slate-800/40 font-bold uppercase text-slate-400 border-b border-slate-100 dark:border-slate-800">
-                  <tr>
-                    <th class="p-3">Hari &amp; Tanggal</th><th class="p-3">Waktu</th><th class="p-3">Ruangan</th>
-                    <th class="p-3">Agenda Rapat</th><th class="p-3">PIC</th><th class="p-3 text-center">Status</th>
-                  </tr>
-                </thead>
-                <tbody id="completedAgendaTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
-              </table>
-            </div>
-          </section>
+    <!-- Kontainer Utama (Card Terpusat, Optimal untuk Layar HP) -->
+    <main class="w-full max-w-md bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 sm:p-8 text-center transition-all">
+        
+        <!-- Ikon Ilustrasi Sederhana -->
+        <div class="mx-auto mb-5 w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
         </div>
 
-        <!-- Sidebar QR -->
-        <aside class="lg:col-span-2 bg-gradient-to-b from-slate-900 to-slate-800 text-white rounded-2xl p-4 shadow-xl border border-slate-700 flex flex-col items-center text-center space-y-4 sticky top-20">
-          <div class="w-full pb-2 border-b border-slate-700/80">
-            <span class="bg-brand-500/20 text-brand-300 border border-brand-500/30 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider inline-block mb-1">Quick Booking</span>
-            <h4 class="font-bold text-sm">Scan QR Code</h4>
-            <p class="text-[11px] text-slate-400 mt-1">Scan via kamera HP untuk booking cepat.</p>
-          </div>
-          <div class="bg-white p-2 rounded-xl shadow-md border-2 border-slate-600">
-            <img id="sidebarQR" src="" alt="QR Code Booking" class="w-32 h-32 object-contain">
-          </div>
-          <div class="text-[10px] text-slate-400 space-y-2 w-full pt-1 border-t border-slate-700/60">
-            <p class="flex items-center justify-center space-x-1"><i class="fa-solid fa-bolt text-amber-400"></i><span>Langsung ke Form Input</span></p>
-            <button data-action="tab" data-tab="booking" class="w-full py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-lg transition text-xs shadow-md">Buka Form Booking</button>
-          </div>
-        </aside>
-      </div>
-    </div>
+        <!-- Lencana Informasi -->
+        <span class="inline-block px-3 py-1 mb-3 text-xs font-semibold tracking-wide text-blue-700 bg-blue-50 rounded-full">
+            Info Penting 👋
+        </span>
 
-    <!-- ===== HALAMAN 2: FORM BOOKING ===== -->
-    <div id="pageBooking" class="hidden max-w-3xl mx-auto">
-      <div class="card p-6 sm:p-8 space-y-6">
+        <!-- Judul Utama -->
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-3">
+            Booking Ruang Rapat Pindah Alamat, Nih!
+        </h1>
 
-        <div class="border-b border-slate-100 dark:border-slate-800 pb-4">
-          <span class="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider">Halaman 2</span>
-          <h2 class="text-2xl font-bold text-slate-900 dark:text-white mt-0.5">Formulir Pemesanan Ruang Rapat</h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400">Lengkapi detail rapat di bawah ini. Sistem akan otomatis memvalidasi bentrok ruangan &amp; sekat.</p>
-        </div>
+        <!-- Pesan Singkat -->
+        <p class="text-slate-600 text-base leading-relaxed mb-7">
+            Biar makin gampang dan lancar, booking ruang rapat sekarang pindah ke link yang baru ya. Langsung aja klik tombol di bawah!
+        </p>
 
-        <form id="formBooking" class="space-y-5">
+        <!-- Tombol Utama (Area sentuh besar untuk pengguna HP) -->
+        <a href="https://kerjaanws.github.io/MeetingRoomITD/" 
+           class="w-full flex items-center justify-center gap-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-base sm:text-lg py-4 px-6 rounded-2xl shadow-md shadow-blue-600/20 transition-all duration-150 transform active:scale-[0.98]">
+            <span>Gas ke Link Baru</span>
+            <!-- Ikon Panah Keluar -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+        </a>
 
-          <div>
-            <label for="inputTitle" class="label">Nama Agenda Rapat <span class="text-rose-500">*</span></label>
-            <div class="relative">
-              <input type="text" id="inputTitle" class="field" required placeholder="Contoh: Rapat Koordinasi Program Kerja Q4">
-              <i class="fa-solid fa-heading field-icon"></i>
-            </div>
-          </div>
+        <!-- Garis Pemisah -->
+        <div class="my-6 border-t border-slate-100"></div>
 
-          <div>
-            <label for="inputDate" class="label">Hari &amp; Tanggal <span class="text-rose-500">*</span></label>
-            <div class="relative">
-              <input type="date" id="inputDate" class="field" required>
-              <i class="fa-solid fa-calendar-days field-icon"></i>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label for="inputStartTime" class="label">Waktu Mulai <span class="text-rose-500">*</span></label>
-              <div class="relative">
-                <input type="time" id="inputStartTime" class="field" required>
-                <i class="fa-solid fa-clock field-icon"></i>
-              </div>
-            </div>
-            <div>
-              <label for="inputEndTime" class="label">Waktu Selesai <span class="text-rose-500">*</span></label>
-              <div class="relative">
-                <input type="time" id="inputEndTime" class="field" required>
-                <i class="fa-solid fa-clock-rotate-left field-icon"></i>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label for="inputParticipants" class="label">Banyaknya Peserta (Orang) <span class="text-rose-500">*</span></label>
-            <div class="relative">
-              <input type="number" id="inputParticipants" class="field" min="1" max="16" required placeholder="Masukkan jumlah peserta (1 - 16)">
-              <i class="fa-solid fa-users field-icon"></i>
-            </div>
-            <p class="text-[11px] text-slate-500 mt-1">*Jika peserta &gt; 10 orang, ruangan otomatis diarahkan ke <strong>Bravery + Agility (Sekat Dibuka)</strong>.</p>
-          </div>
-
-          <div>
-            <label for="inputRoom" class="label">Pilihan Ruangan <span class="text-rose-500">*</span></label>
-            <div class="relative">
-              <select id="inputRoom" class="field" required></select>
-              <i class="fa-solid fa-door-open field-icon"></i>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label for="inputPicName" class="label">Nama PIC <span class="text-rose-500">*</span></label>
-              <div class="relative">
-                <input type="text" id="inputPicName" class="field" required placeholder="Contoh: Ahmad Rizki">
-                <i class="fa-solid fa-user field-icon"></i>
-              </div>
-            </div>
-            <div>
-              <label for="inputPicWa" class="label">No. WhatsApp PIC <span class="text-rose-500">*</span></label>
-              <div class="relative">
-                <input type="tel" id="inputPicWa" class="field" required placeholder="Contoh: 081234567890">
-                <i class="fa-solid fa-phone field-icon"></i>
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-slate-50 dark:bg-slate-950/60 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
-            <label for="inputPin" class="label" style="margin-bottom:0">Buat PIN Keamanan Hapus Agenda <span class="text-rose-500">*</span></label>
-            <div class="relative">
-              <input type="password" id="inputPin" class="field font-mono" required maxlength="6" minlength="4" pattern="\d{4,6}"
-                     inputmode="numeric" placeholder="Buat PIN 4-6 digit angka (contoh: 1234)">
-              <i class="fa-solid fa-key field-icon"></i>
-            </div>
-            <p class="text-[11px] text-slate-500">*PIN wajib diingat. Hanya pemegang PIN yang bisa menghapus agenda ini.</p>
-          </div>
-
-          <button type="submit" class="w-full py-3.5 px-4 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-lg shadow-brand-500/20 transition duration-200 flex items-center justify-center space-x-2 text-sm">
-            <i class="fa-solid fa-paper-plane"></i><span>Simpan &amp; Terbitkan Jadwal Booking</span>
-          </button>
-        </form>
-      </div>
-    </div>
-  </main>
-
-  <script>
-    'use strict';
-
-    /* ========================================================
-     * KONFIGURASI
-     * ====================================================== */
-    const DAYS_ID = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    const COMBINE_THRESHOLD = 10; // peserta > 10 => ruangan gabungan
-
-    const ROOMS = {
-      bravery:   { name: 'Ruang Bravery',   capacity: 8,  note: 'Ruangan Sekat Mandiri' },
-      agility:   { name: 'Ruang Agility',   capacity: 8,  note: 'Ruangan Sekat Mandiri' },
-      integrity: { name: 'Ruang Integrity', capacity: 8,  note: 'Ruangan Sekat Mandiri' },
-      combined:  { name: 'Bravery + Agility (Sekat Dibuka)', capacity: 16, note: 'Ruangan Gabungan (Sekat Dibuka)' }
-    };
-
-    // Ruangan yang saling berbagi ruang fisik
-    const SHARES_SPACE = {
-      bravery: ['combined'],
-      agility: ['combined'],
-      combined: ['bravery', 'agility']
-    };
-
-    /* ========================================================
-     * UTILITAS
-     * ====================================================== */
-    const $ = (id) => document.getElementById(id);
-    const pad = (n) => String(n).padStart(2, '0');
-
-    const toDateStr = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-    const toTimeStr = (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    const getToday = () => toDateStr(new Date()); // tanggal lokal, bukan UTC
-
-    const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (c) =>
-      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-
-    const roomsClash = (a, b) => a === b || (SHARES_SPACE[a] || []).includes(b);
-    const timesOverlap = (s1, e1, s2, e2) => s1 < e2 && e1 > s2;
-
-    function formatDate(dateStr) {
-      const d = new Date(`${dateStr}T00:00:00`);
-      return {
-        dayName: DAYS_ID[d.getDay()],
-        formatted: `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`
-      };
-    }
-
-    /* ========================================================
-     * SUPABASE (DATABASE REALTIME)
-     * Isi dua nilai ini dari Supabase > Project Settings > API
-     * ====================================================== */
-    const SUPABASE_URL = 'https://pyamrqxtjlvvnarblhqe.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_yDQYpj4Zoxmj5Qir3WubhQ_O3BKftlp';
-
-    const isConfigured = !SUPABASE_URL.startsWith('ISI_');
-    const db = isConfigured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
-
-    let bookings = [];
-    let pendingDeleteId = null;
-
-    // Baris database (snake_case, jam "HH:MM:SS") -> objek aplikasi
-    const fromRow = (r) => ({
-      id: r.id,
-      title: r.title,
-      date: r.date,
-      startTime: r.start_time.slice(0, 5),
-      endTime: r.end_time.slice(0, 5),
-      participants: r.participants,
-      roomId: r.room_id,
-      picName: r.pic_name,
-      picWa: r.pic_wa
-    });
-
-    async function loadBookings() {
-      if (!db) return;
-      const { data, error } = await db.from('bookings').select('*').order('date').order('start_time');
-      if (error) return showToast(`Gagal memuat data: ${error.message}`, 'danger');
-      bookings = data.map(fromRow);
-      renderDashboard();
-    }
-
-    function startRealtime() {
-      if (!db) return;
-      db.channel('bookings-live')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, loadBookings)
-        .subscribe();
-      setInterval(loadBookings, 60000); // cadangan bila koneksi realtime terputus
-    }
-
-    /* ========================================================
-     * ELEMEN DOM
-     * ====================================================== */
-    const el = {
-      pageDisplay: $('pageDisplay'),
-      pageBooking: $('pageBooking'),
-      tabs: document.querySelectorAll('.tab'),
-      filterRoom: $('filterRoomSelect'),
-      roomCards: $('roomCardsContainer'),
-      activeBody: $('activeAgendaTableBody'),
-      completedBody: $('completedAgendaTableBody'),
-      activeCount: $('activeAgendaCount'),
-      completedCount: $('completedAgendaCount'),
-      qr: $('sidebarQR'),
-      form: $('formBooking'),
-      title: $('inputTitle'),
-      date: $('inputDate'),
-      start: $('inputStartTime'),
-      end: $('inputEndTime'),
-      participants: $('inputParticipants'),
-      room: $('inputRoom'),
-      picName: $('inputPicName'),
-      picWa: $('inputPicWa'),
-      pin: $('inputPin'),
-      pinModal: $('pinModal'),
-      pinVerify: $('inputPinVerify')
-    };
-
-    /* ========================================================
-     * INISIALISASI DROPDOWN RUANGAN
-     * ====================================================== */
-    function populateRoomSelects() {
-      Object.entries(ROOMS).forEach(([id, room]) => {
-        el.filterRoom.add(new Option(room.name, id));
-        el.room.add(new Option(`${room.name} (Kapasitas Max ${room.capacity} Orang)`, id));
-      });
-    }
-
-    /* ========================================================
-     * NAVIGASI TAB
-     * ====================================================== */
-    function switchTab(target) {
-      const isDisplay = target === 'display';
-      el.pageDisplay.classList.toggle('hidden', !isDisplay);
-      el.pageBooking.classList.toggle('hidden', isDisplay);
-      el.tabs.forEach((btn) => btn.classList.toggle('active', btn.dataset.tab === target));
-      if (isDisplay) renderDashboard();
-    }
-
-    /* ========================================================
-     * LOGIKA BOOKING
-     * ====================================================== */
-    function findConflict(roomId, date, startTime, endTime) {
-      return bookings.find((b) =>
-        b.date === date &&
-        roomsClash(roomId, b.roomId) &&
-        timesOverlap(startTime, endTime, b.startTime, b.endTime));
-    }
-
-    function autoSelectRoom() {
-      const count = parseInt(el.participants.value, 10) || 0;
-      if (count > COMBINE_THRESHOLD) el.room.value = 'combined';
-      else if (count > 0 && el.room.value === 'combined') el.room.value = 'bravery';
-    }
-
-    async function handleSubmit(e) {
-      e.preventDefault();
-
-      const data = {
-        title: el.title.value.trim(),
-        date: el.date.value,
-        startTime: el.start.value,
-        endTime: el.end.value,
-        participants: parseInt(el.participants.value, 10),
-        roomId: el.room.value,
-        picName: el.picName.value.trim(),
-        picWa: el.picWa.value.trim(),
-        pin: el.pin.value.trim()
-      };
-
-      if (data.startTime >= data.endTime) {
-        return showToast('Waktu selesai harus lebih akhir dari waktu mulai!', 'danger');
-      }
-
-      if (!/^\d{4,6}$/.test(data.pin)) {
-        return showToast('PIN harus berupa 4-6 digit angka!', 'danger');
-      }
-
-      const room = ROOMS[data.roomId];
-      if (data.participants > room.capacity) {
-        return showToast(`Kapasitas ${room.name} maksimal ${room.capacity} orang!`, 'danger');
-      }
-
-      const conflict = findConflict(data.roomId, data.date, data.startTime, data.endTime);
-      if (conflict) {
-        return showToast(
-          `Jadwal bentrok! ${ROOMS[conflict.roomId].name} sedang digunakan untuk "${conflict.title}" (${conflict.startTime} - ${conflict.endTime})`,
-          'danger');
-      }
-
-      if (!db) return showToast('Database belum dikonfigurasi (isi SUPABASE_URL & SUPABASE_ANON_KEY).', 'danger');
-
-      const submitBtn = el.form.querySelector('[type="submit"]');
-      submitBtn.disabled = true;
-      const { error } = await db.rpc('create_booking', {
-        p_title: data.title, p_date: data.date, p_start: data.startTime, p_end: data.endTime,
-        p_participants: data.participants, p_room: data.roomId,
-        p_pic_name: data.picName, p_pic_wa: data.picWa, p_pin: data.pin
-      });
-      submitBtn.disabled = false;
-
-      if (error) return showToast(error.message, 'danger');
-
-      el.form.reset();
-      el.date.value = getToday();
-      showToast('Booking berhasil diterbitkan!');
-      await loadBookings();
-      setTimeout(() => switchTab('display'), 400);
-    }
-
-    /* ========================================================
-     * RENDER: KARTU RUANGAN
-     * ====================================================== */
-    function findActiveBooking(roomId, today, nowTime) {
-      return bookings.find((b) =>
-        b.date === today &&
-        roomsClash(roomId, b.roomId) &&
-        nowTime >= b.startTime && nowTime < b.endTime);
-    }
-
-    function roomCardHtml(roomId, active) {
-      const room = ROOMS[roomId];
-      const inUse = Boolean(active);
-
-      const cardTone = inUse
-        ? 'border-rose-200 dark:border-rose-900/60 bg-rose-50/60 dark:bg-rose-950/20'
-        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900';
-      const badgeTone = inUse
-        ? 'text-rose-600 dark:text-rose-400 bg-rose-100 dark:bg-rose-900/50'
-        : 'text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/50';
-
-      const detail = inUse
-        ? `<div class="bg-rose-100/70 dark:bg-rose-900/40 p-2.5 rounded-xl text-xs space-y-1">
-             <p class="font-bold text-rose-900 dark:text-rose-200 truncate">${escapeHtml(active.title)}</p>
-             <p class="text-[11px] text-rose-700 dark:text-rose-300"><i class="fa-solid fa-clock mr-1"></i>${active.startTime} - ${active.endTime}</p>
-             <p class="text-[11px] text-rose-700 dark:text-rose-300"><i class="fa-solid fa-user mr-1"></i>${escapeHtml(active.picName)}</p>
-           </div>`
-        : `<p class="text-xs text-slate-400 italic">Tidak ada agenda berlangsung saat ini.</p>`;
-
-      return `
-        <div class="p-4 rounded-2xl border ${cardTone} shadow-sm flex flex-col justify-between transition hover:shadow-md">
-          <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-[10px] font-bold uppercase tracking-wider ${badgeTone} px-2.5 py-0.5 rounded-full">
-                ${inUse ? '• SEDANG DIGUNAKAN' : '• TERSEDIA'}
-              </span>
-              <span class="text-xs text-slate-400 font-semibold"><i class="fa-solid fa-users mr-1"></i>Max ${room.capacity}</span>
-            </div>
-            <div>
-              <h4 class="font-bold text-sm text-slate-900 dark:text-white">${room.name}</h4>
-              <p class="text-[11px] text-slate-400 mt-0.5">${room.note}</p>
-            </div>
-            ${detail}
-          </div>
-          <button data-action="quick-book" data-room="${roomId}"
-                  class="mt-4 w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-brand-600 hover:text-white dark:hover:bg-brand-600 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs transition">
-            Booking Ruangan Ini
-          </button>
-        </div>`;
-    }
-
-    /* ========================================================
-     * RENDER: TABEL AGENDA
-     * ====================================================== */
-    function activeRowHtml(b, today) {
-      const { dayName, formatted } = formatDate(b.date);
-      const waDigits = b.picWa.replace(/\D/g, '');
-
-      return `
-        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-          <td class="p-3.5">
-            <span class="font-bold text-slate-900 dark:text-white block">${dayName}</span>
-            <span class="text-[11px] text-slate-400 font-mono">${formatted}
-              ${b.date === today ? '<span class="text-emerald-500 font-bold">(Hari ini)</span>' : ''}</span>
-          </td>
-          <td class="p-3.5 font-mono font-semibold text-slate-700 dark:text-slate-300">${b.startTime} - ${b.endTime}</td>
-          <td class="p-3.5">
-            <span class="px-2.5 py-1 rounded-md bg-brand-50 dark:bg-brand-600/20 text-brand-600 dark:text-brand-300 font-semibold border border-brand-100 dark:border-brand-600/40">
-              ${ROOMS[b.roomId].name}
-            </span>
-          </td>
-          <td class="p-3.5 font-medium text-slate-900 dark:text-white max-w-xs truncate">${escapeHtml(b.title)}</td>
-          <td class="p-3.5 text-slate-600 dark:text-slate-400"><i class="fa-solid fa-users text-slate-400 mr-1"></i>${b.participants} Org</td>
-          <td class="p-3.5">
-            <div class="font-semibold text-slate-800 dark:text-slate-200">${escapeHtml(b.picName)}</div>
-            <a href="https://wa.me/${waDigits}" target="_blank" rel="noopener noreferrer"
-               class="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center space-x-1">
-              <i class="fa-brands fa-whatsapp"></i><span>${escapeHtml(b.picWa)}</span>
+        <!-- Kotak URL & Tombol Salin Link (Untuk dibagikan ke WhatsApp dll.) -->
+        <div class="bg-slate-50 rounded-2xl p-3.5 border border-slate-200/70">
+            <p class="text-xs text-slate-500 font-medium mb-1.5">Atau klik / salin link barunya di sini:</p>
+            
+            <!-- Link yang bisa diklik langsung -->
+            <a href="https://kerjaanws.github.io/MeetingRoomITD/" 
+               id="targetUrl"
+               class="block text-sm font-medium text-blue-600 hover:underline break-all mb-3">
+                https://kerjaanws.github.io/MeetingRoomITD/
             </a>
-          </td>
-          <td class="p-3.5 text-center">
-            <button data-action="delete" data-id="${b.id}"
-                    class="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-400 rounded-lg font-semibold text-[11px] transition">
-              <i class="fa-solid fa-trash mr-1"></i>Hapus
+
+            <!-- Tombol Salin Link -->
+            <button type="button" 
+                    id="copyBtn"
+                    onclick="copyLink()"
+                    class="w-full py-2.5 px-4 bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-700 font-medium text-sm rounded-xl border border-slate-200 shadow-2xs flex items-center justify-center gap-2 transition-colors cursor-pointer">
+                <svg id="copyIcon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <svg id="checkIcon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-emerald-600 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span id="copyText">Salin Link</span>
             </button>
-          </td>
-        </tr>`;
-    }
+        </div>
 
-    function completedRowHtml(b) {
-      const { dayName, formatted } = formatDate(b.date);
-      return `
-        <tr class="opacity-70">
-          <td class="p-3 font-medium">${dayName}, ${formatted}</td>
-          <td class="p-3 font-mono">${b.startTime} - ${b.endTime}</td>
-          <td class="p-3">${ROOMS[b.roomId].name}</td>
-          <td class="p-3 line-through">${escapeHtml(b.title)}</td>
-          <td class="p-3">${escapeHtml(b.picName)} (${escapeHtml(b.picWa)})</td>
-          <td class="p-3 text-center">
-            <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 font-semibold text-[10px]">
-              <i class="fa-solid fa-check mr-1"></i>Selesai
-            </span>
-          </td>
-        </tr>`;
-    }
+    </main>
 
-    const emptyRow = (cols, text, pad) =>
-      `<tr><td colspan="${cols}" class="${pad} text-center italic text-slate-400">${text}</td></tr>`;
+    <!-- Footer Kecil -->
+    <footer class="mt-6 text-center text-xs text-slate-400">
+        Jangan lupa di-bookmark ya biar besok-besok gampang nyarinya! 😉
+    </footer>
 
-    /* ========================================================
-     * RENDER: DASHBOARD
-     * ====================================================== */
-    function renderDashboard() {
-      const now = new Date();
-      const today = toDateStr(now);
-      const nowTime = toTimeStr(now);
+    <!-- Script untuk fitur salin link ke clipboard -->
+    <script>
+        function copyLink() {
+            const urlText = "https://kerjaanws.github.io/MeetingRoomITD/";
+            const copyBtn = document.getElementById("copyBtn");
+            const copyText = document.getElementById("copyText");
+            const copyIcon = document.getElementById("copyIcon");
+            const checkIcon = document.getElementById("checkIcon");
 
-      // 1. Kartu ruangan
-      el.roomCards.innerHTML = Object.keys(ROOMS)
-        .map((id) => roomCardHtml(id, findActiveBooking(id, today, nowTime)))
-        .join('');
+            // Membuat elemen input sementara untuk menyalin teks secara kompatibel di berbagai browser HP & iframe
+            const tempInput = document.createElement("textarea");
+            tempInput.value = urlText;
+            tempInput.style.position = "fixed";
+            tempInput.style.left = "-9999px";
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            tempInput.setSelectionRange(0, 99999); // Untuk perangkat mobile
 
-      // 2. Filter & pisahkan agenda aktif / selesai
-      const filter = el.filterRoom.value;
-      const visible = filter === 'all' ? bookings : bookings.filter((b) => b.roomId === filter);
+            try {
+                document.execCommand("copy");
+                
+                // Ubah tampilan tombol sebagai umpan balik berhasil disalin
+                copyText.textContent = "Link berhasil disalin!";
+                copyText.classList.add("text-emerald-700", "font-semibold");
+                copyBtn.classList.add("border-emerald-300", "bg-emerald-50/60");
+                copyIcon.classList.add("hidden");
+                checkIcon.classList.remove("hidden");
 
-      const isCompleted = (b) => b.date < today || (b.date === today && nowTime >= b.endTime);
-      const active = visible.filter((b) => !isCompleted(b));
-      const completed = visible.filter(isCompleted);
-
-      active.sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
-      completed.sort((a, b) => b.date.localeCompare(a.date) || b.endTime.localeCompare(a.endTime));
-
-      el.activeCount.textContent = `${active.length} Agenda`;
-      el.completedCount.textContent = `${completed.length} Riwayat`;
-
-      // 3. Tabel
-      el.activeBody.innerHTML = active.length
-        ? active.map((b) => activeRowHtml(b, today)).join('')
-        : emptyRow(7, 'Tidak ada agenda rapat aktif atau mendatang.', 'p-6');
-
-      el.completedBody.innerHTML = completed.length
-        ? completed.map(completedRowHtml).join('')
-        : emptyRow(6, 'Belum ada riwayat agenda rapat yang selesai.', 'p-4');
-    }
-
-    /* ========================================================
-     * MODAL PIN & HAPUS AGENDA
-     * ====================================================== */
-    function openPinModal(id) {
-      pendingDeleteId = id;
-      el.pinVerify.value = '';
-      el.pinModal.classList.remove('hidden');
-      el.pinVerify.focus();
-    }
-
-    function closePinModal() {
-      pendingDeleteId = null;
-      el.pinModal.classList.add('hidden');
-    }
-
-    async function confirmDelete() {
-      if (!pendingDeleteId) return;
-      if (!db) return showToast('Database belum dikonfigurasi.', 'danger');
-
-      const { error } = await db.rpc('delete_booking', {
-        p_id: pendingDeleteId,
-        p_pin: el.pinVerify.value.trim()
-      });
-      if (error) return showToast(error.message, 'danger');
-
-      closePinModal();
-      await loadBookings();
-      showToast('Agenda berhasil dihapus!');
-    }
-
-    /* ========================================================
-     * TOAST
-     * ====================================================== */
-    function showToast(message, type = 'success') {
-      const success = type === 'success';
-      const toast = document.createElement('div');
-
-      toast.className = `${success ? 'bg-emerald-600' : 'bg-rose-600'} text-white px-4 py-3 rounded-xl shadow-lg flex items-center space-x-3 transform transition-all duration-300 opacity-0 translate-y-2 pointer-events-auto text-xs font-semibold`;
-      toast.innerHTML = `<i class="fa-solid ${success ? 'fa-circle-check' : 'fa-circle-exclamation'} text-base"></i><span></span>`;
-      toast.lastElementChild.textContent = message;
-
-      $('toastContainer').appendChild(toast);
-
-      setTimeout(() => toast.classList.remove('opacity-0', 'translate-y-2'), 10);
-      setTimeout(() => {
-        toast.classList.add('opacity-0', 'translate-y-2');
-        setTimeout(() => toast.remove(), 300);
-      }, 3500);
-    }
-
-    /* ========================================================
-     * TEMA & QR
-     * ====================================================== */
-    function toggleTheme() {
-      const isDark = document.documentElement.classList.toggle('dark');
-      $('themeIcon').className = isDark ? 'fa-solid fa-sun text-amber-400' : 'fa-solid fa-moon';
-    }
-
-    function generateQR() {
-      const url = encodeURIComponent(`${location.href.split('#')[0]}#booking`);
-      el.qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${url}&color=0f172a`;
-    }
-
-    /* ========================================================
-     * EVENT LISTENERS
-     * ====================================================== */
-    document.addEventListener('click', (e) => {
-      const target = e.target.closest('[data-action]');
-      if (!target) return;
-
-      switch (target.dataset.action) {
-        case 'tab':        switchTab(target.dataset.tab); break;
-        case 'quick-book': switchTab('booking'); el.room.value = target.dataset.room; break;
-        case 'delete':     openPinModal(target.dataset.id); break;
-        case 'close-pin':  closePinModal(); break;
-        case 'confirm-pin': confirmDelete(); break;
-      }
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (el.pinModal.classList.contains('hidden')) return;
-      if (e.key === 'Escape') closePinModal();
-      if (e.key === 'Enter') confirmDelete();
-    });
-
-    el.form.addEventListener('submit', handleSubmit);
-    el.participants.addEventListener('input', autoSelectRoom);
-    el.filterRoom.addEventListener('change', renderDashboard);
-    $('themeToggle').addEventListener('click', toggleTheme);
-
-    /* ========================================================
-     * START
-     * ====================================================== */
-    document.addEventListener('DOMContentLoaded', () => {
-      populateRoomSelects();
-      el.date.value = getToday();
-      generateQR();
-      renderDashboard();
-      if (location.hash === '#booking') switchTab('booking');
-
-      if (!isConfigured) showToast('Isi SUPABASE_URL & SUPABASE_ANON_KEY di bagian konfigurasi.', 'danger');
-      loadBookings();
-      startRealtime();
-      setInterval(renderDashboard, 30000); // perbarui status "sedang digunakan" otomatis
-    });
-  </script>
+                // Kembalikan ke tampilan semula setelah 2.5 detik
+                setTimeout(() => {
+                    copyText.textContent = "Salin Link";
+                    copyText.classList.remove("text-emerald-700", "font-semibold");
+                    copyBtn.classList.remove("border-emerald-300", "bg-emerald-50/60");
+                    copyIcon.classList.remove("hidden");
+                    checkIcon.classList.add("hidden");
+                }, 2500);
+            } catch (err) {
+                console.error("Gagal menyalin link:", err);
+                copyText.textContent = "Gagal menyalin";
+            } finally {
+                document.body.removeChild(tempInput);
+            }
+        }
+    </script>
 </body>
 </html>
